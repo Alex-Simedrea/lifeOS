@@ -14,7 +14,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <Separator orientation="vertical" className="h-6" />
         </header>
         <div className="flex-1">
-          {children}
+          <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-7xl">{children}</div>
+          </div>
         </div>
       </main>
     </SidebarProvider>

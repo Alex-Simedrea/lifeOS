@@ -42,6 +42,15 @@ export default defineSchema({
       })
     ),
     tags: v.array(v.id("tags")),
+    subtasks: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          text: v.string(),
+          completed: v.boolean(),
+        })
+      )
+    ),
     userId: v.string(),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -49,5 +58,43 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_status", ["userId", "status"])
     .index("by_due_date", ["userId", "dueAt"]),
+
+  events: defineTable({
+    title: v.string(),
+    startDate: v.number(),
+    endDate: v.number(),
+    location: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    color: v.union(
+      v.literal("blue"),
+      v.literal("green"),
+      v.literal("red"),
+      v.literal("yellow"),
+      v.literal("purple"),
+      v.literal("orange"),
+      v.literal("gray")
+    ),
+    recurrence: v.optional(
+      v.object({
+        type: v.union(
+          v.literal("daily"),
+          v.literal("weekly"),
+          v.literal("monthly"),
+          v.literal("yearly")
+        ),
+        interval: v.number(),
+        endDate: v.optional(v.number()),
+        daysOfWeek: v.optional(v.array(v.number())),
+        dayOfMonth: v.optional(v.number()),
+      })
+    ),
+    tags: v.array(v.id("tags")),
+    userId: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_start_date", ["userId", "startDate"])
+    .index("by_date_range", ["userId", "startDate", "endDate"]),
 })
 

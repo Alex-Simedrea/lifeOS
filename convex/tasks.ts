@@ -101,6 +101,15 @@ export const create = mutation({
     duration: v.optional(v.number()),
     recurrence: recurrenceValidator,
     tags: v.optional(v.array(v.id("tags"))),
+    subtasks: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          text: v.string(),
+          completed: v.boolean(),
+        })
+      )
+    ),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
@@ -119,6 +128,7 @@ export const create = mutation({
       duration: args.duration,
       recurrence: args.recurrence,
       tags: args.tags ?? [],
+      subtasks: args.subtasks ?? [],
       userId: identity.subject,
       createdAt: now,
       updatedAt: now,
@@ -152,6 +162,15 @@ export const update = mutation({
     duration: v.optional(v.number()),
     recurrence: recurrenceValidator,
     tags: v.optional(v.array(v.id("tags"))),
+    subtasks: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          text: v.string(),
+          completed: v.boolean(),
+        })
+      )
+    ),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
@@ -209,6 +228,92 @@ export const toggleStatus = mutation({
     const newStatus = task.status === "completed" ? "todo" : "completed"
     return await ctx.db.patch(args.id, {
       status: newStatus,
+      updatedAt: Date.now(),
+    })
+  },
+})
+
+export const addSubtask = mutation({
+  args: {
+    taskId: v.id("tasks"),
+    text: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      throw new Error("Not authenticated")
+    }
+
+    const task = await ctx.db.get(args.taskId)
+    if (!task || task.userId !== identity.subject) {
+      throw new Error("Task not found or unauthorized")
+    }
+
+    const subtasks = task.subtasks ?? []
+    const newSubtask = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      text: args.text.trim(),
+      completed: false,
+    }
+
+    return await ctx.db.patch(args.taskId, {
+      subtasks: [...subtasks, newSubtask],
+      updatedAt: Date.now(),
+    })
+  },
+})
+
+export const toggleSubtask = mutation({
+  args: {
+    taskId: v.id("tasks"),
+    subtaskId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      throw new Error("Not authenticated")
+    }
+
+    const task = await ctx.db.get(args.taskId)
+    if (!task || task.userId !== identity.subject) {
+      throw new Error("Task not found or unauthorized")
+    }
+
+    const subtasks = (task.subtasks ?? []).map((subtask) =>
+      subtask.id === args.subtaskId
+        ? { ...subtask, completed: !subtask.completed }
+        : subtask
+    )
+
+    return await ctx.db.patch(args.taskId, {
+      subtasks,
+      updatedAt: Date.now(),
+    })
+  },
+})
+
+export const deleteSubtask = mutation({
+  args: {
+    taskId: v.id("tasks"),
+    subtaskId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      throw new Error("Not authenticated")
+    }
+
+    const task = await ctx.db.get(args.taskId)
+    if (!task || task.userId !== identity.subject) {
+      throw new Error("Task not found or unauthorized")
+    }
+
+    const subtasks = (task.subtasks ?? []).filter(
+      (subtask) => subtask.id !== args.subtaskId
+    )
+
+    return await ctx.db.patch(args.taskId, {
+      subtasks,
       updatedAt: Date.now(),
     })
   },
