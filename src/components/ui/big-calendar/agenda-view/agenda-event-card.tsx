@@ -2,7 +2,7 @@
 
 import { format, parseISO } from "date-fns";
 import { cva } from "class-variance-authority";
-import { Clock, Text, User } from "lucide-react";
+import { CheckSquare2, Clock, Text, User } from "lucide-react";
 
 import { useCalendar } from "@/components/calendar/calendar-context";
 
@@ -69,6 +69,7 @@ export function AgendaEventCard({ event, eventCurrentDay, eventTotalDays }: IPro
       <div role="button" tabIndex={0} className={agendaEventCardClasses} onKeyDown={handleKeyDown}>
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-1.5">
+            {event.kind === "task" && <CheckSquare2 className="size-4 shrink-0" />}
             {["mixed", "dot"].includes(badgeVariant) && (
               <svg width="8" height="8" viewBox="0 0 8 8" className="event-dot shrink-0">
                 <circle cx="4" cy="4" r="4" />

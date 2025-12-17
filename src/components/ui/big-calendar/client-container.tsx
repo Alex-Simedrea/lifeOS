@@ -1,7 +1,26 @@
 "use client";
 
 import { useMemo } from "react";
-import { isSameDay, parseISO } from "date-fns";
+import {
+  addDays,
+  addMonths,
+  addWeeks,
+  addYears,
+  differenceInCalendarDays,
+  differenceInCalendarMonths,
+  differenceInCalendarWeeks,
+  differenceInCalendarYears,
+  endOfMonth,
+  endOfWeek,
+  endOfYear,
+  getDaysInMonth,
+  isSameDay,
+  min as dateMin,
+  parseISO,
+  startOfMonth,
+  startOfWeek,
+  startOfYear,
+} from "date-fns";
 
 import { useCalendar } from "@/components/calendar/calendar-context";
 
@@ -11,7 +30,6 @@ import { CalendarHeader } from "@/components/ui/big-calendar/header/calendar-hea
 import { CalendarYearView } from "@/components/ui/big-calendar/year-view/calendar-year-view";
 import { CalendarMonthView } from "@/components/ui/big-calendar/month-view/calendar-month-view";
 import { CalendarAgendaView } from "@/components/ui/big-calendar/agenda-view/calendar-agenda-view";
-import { CalendarDayView } from "@/components/ui/big-calendar/week-and-day-view/calendar-day-view";
 import { CalendarWeekView } from "@/components/ui/big-calendar/week-and-day-view/calendar-week-view";
 
 import type { TCalendarView } from "@/lib/calendar/types";
@@ -20,11 +38,132 @@ interface IProps {
   view: TCalendarView;
 }
 
+function makeOccurrenceId(baseId: number, start: Date) {
+  const n = baseId * 1000003 + start.getTime();
+  return Math.abs(n % Number.MAX_SAFE_INTEGER);
+}
+
+function expandRecurring(events: ReturnType<typeof useCalendar>["events"], rangeStart: Date, rangeEnd: Date) {
+  const expanded: typeof events = [];
+
+  for (const event of events) {
+    expanded.push(event);
+
+    const rec = event.recurrence;
+    if (!rec) continue;
+
+    const baseStart = parseISO(event.startDate);
+    const baseEnd = parseISO(event.endDate);
+    const durationMs = baseEnd.getTime() - baseStart.getTime();
+    const interval = Math.max(1, rec.interval || 1);
+    const recurrenceEnd = rec.endDate ? new Date(rec.endDate) : rangeEnd;
+    const until = dateMin([rangeEnd, recurrenceEnd]);
+
+    const baseH = baseStart.getHours();
+    const baseM = baseStart.getMinutes();
+    const baseS = baseStart.getSeconds();
+    const baseMs = baseStart.getMilliseconds();
+
+    const pushIfInRange = (occStart: Date) => {
+      if (occStart.getTime() === baseStart.getTime()) return;
+      if (occStart < baseStart) return;
+      const occEnd = new Date(occStart.getTime() + durationMs);
+      if (occEnd < rangeStart || occStart > rangeEnd) return;
+      expanded.push({
+        ...event,
+        id: makeOccurrenceId(event.id, occStart),
+        seriesStartDate: event.seriesStartDate ?? event.startDate,
+        seriesEndDate: event.seriesEndDate ?? event.endDate,
+        startDate: occStart.toISOString(),
+        endDate: occEnd.toISOString(),
+        isRecurrenceInstance: true,
+      });
+    };
+
+    if (rec.type === "daily") {
+      const daysDiff = differenceInCalendarDays(rangeStart, baseStart);
+      const step = Math.floor(daysDiff / interval) * interval;
+      let cursor = addDays(baseStart, step);
+      if (cursor < baseStart) cursor = baseStart;
+      for (; cursor <= until; cursor = addDays(cursor, interval)) {
+        const occStart = new Date(cursor);
+        occStart.setHours(baseH, baseM, baseS, baseMs);
+        pushIfInRange(occStart);
+      }
+      continue;
+    }
+
+    if (rec.type === "weekly") {
+      const days = rec.daysOfWeek && rec.daysOfWeek.length > 0 ? rec.daysOfWeek : [baseStart.getDay()];
+      const baseWeekStart = startOfWeek(baseStart);
+      const weeksDiff = differenceInCalendarWeeks(rangeStart, baseWeekStart);
+      const step = Math.floor(weeksDiff / interval) * interval;
+      let weekCursor = addWeeks(baseWeekStart, step);
+      if (weekCursor < baseWeekStart) weekCursor = baseWeekStart;
+
+      for (; weekCursor <= until; weekCursor = addWeeks(weekCursor, interval)) {
+        for (const dow of days) {
+          const occStart = addDays(startOfWeek(weekCursor), dow);
+          occStart.setHours(baseH, baseM, baseS, baseMs);
+          pushIfInRange(occStart);
+        }
+      }
+      continue;
+    }
+
+    if (rec.type === "monthly") {
+      const dom = rec.dayOfMonth ?? baseStart.getDate();
+      const baseMonthStart = startOfMonth(baseStart);
+      const monthsDiff = differenceInCalendarMonths(rangeStart, baseMonthStart);
+      const step = Math.floor(monthsDiff / interval) * interval;
+      let monthCursor = addMonths(baseMonthStart, step);
+      if (monthCursor < baseMonthStart) monthCursor = baseMonthStart;
+
+      for (; monthCursor <= until; monthCursor = addMonths(monthCursor, interval)) {
+        const maxDay = getDaysInMonth(monthCursor);
+        const day = Math.max(1, Math.min(dom, maxDay));
+        const occStart = new Date(monthCursor.getFullYear(), monthCursor.getMonth(), day, baseH, baseM, baseS, baseMs);
+        pushIfInRange(occStart);
+      }
+      continue;
+    }
+
+    if (rec.type === "yearly") {
+      const baseYearStart = startOfYear(baseStart);
+      const yearsDiff = differenceInCalendarYears(rangeStart, baseYearStart);
+      const step = Math.floor(yearsDiff / interval) * interval;
+      let yearCursor = addYears(baseYearStart, step);
+      if (yearCursor < baseYearStart) yearCursor = baseYearStart;
+
+      const month = baseStart.getMonth();
+      const dom = rec.dayOfMonth ?? baseStart.getDate();
+
+      for (; yearCursor <= until; yearCursor = addYears(yearCursor, interval)) {
+        const tmp = new Date(yearCursor.getFullYear(), month, 1);
+        const maxDay = getDaysInMonth(tmp);
+        const day = Math.max(1, Math.min(dom, maxDay));
+        const occStart = new Date(yearCursor.getFullYear(), month, day, baseH, baseM, baseS, baseMs);
+        pushIfInRange(occStart);
+      }
+    }
+  }
+
+  return expanded;
+}
+
 export function ClientContainer({ view }: IProps) {
   const { selectedDate, selectedUserId, events } = useCalendar();
 
+  const range = useMemo(() => {
+    if (view === "year") return { start: startOfYear(selectedDate), end: endOfYear(selectedDate) };
+    if (view === "month" || view === "agenda") return { start: startOfMonth(selectedDate), end: endOfMonth(selectedDate) };
+    return { start: startOfWeek(selectedDate), end: endOfWeek(selectedDate) };
+  }, [selectedDate, view]);
+
+  const expandedEvents = useMemo(() => expandRecurring(events, range.start, range.end), [events, range.start, range.end]);
+
   const filteredEvents = useMemo(() => {
-    return events.filter(event => {
+    return expandedEvents.filter(event => {
       const eventStartDate = parseISO(event.startDate);
       const eventEndDate = parseISO(event.endDate);
 
@@ -59,16 +198,8 @@ export function ClientContainer({ view }: IProps) {
         const isUserMatch = selectedUserId === "all" || event.user.id === selectedUserId;
         return isInSelectedWeek && isUserMatch;
       }
-
-      if (view === "day") {
-        const dayStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 0, 0, 0);
-        const dayEnd = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59);
-        const isInSelectedDay = eventStartDate <= dayEnd && eventEndDate >= dayStart;
-        const isUserMatch = selectedUserId === "all" || event.user.id === selectedUserId;
-        return isInSelectedDay && isUserMatch;
-      }
     });
-  }, [selectedDate, selectedUserId, events, view]);
+  }, [selectedDate, selectedUserId, expandedEvents, view]);
 
   const singleDayEvents = filteredEvents.filter(event => {
     const startDate = parseISO(event.startDate);
@@ -90,16 +221,19 @@ export function ClientContainer({ view }: IProps) {
   }, [filteredEvents]);
 
   return (
-    <div className="overflow-hidden rounded-xl border">
+    <div className="flex h-full flex-col overflow-hidden rounded-xl border">
       <CalendarHeader view={view} events={filteredEvents} />
 
+      <div className="min-h-0 flex-1">
       <DndProviderWrapper>
-        {view === "day" && <CalendarDayView singleDayEvents={singleDayEvents} multiDayEvents={multiDayEvents} />}
+          <div className="h-full overflow-auto">
         {view === "month" && <CalendarMonthView singleDayEvents={singleDayEvents} multiDayEvents={multiDayEvents} />}
         {view === "week" && <CalendarWeekView singleDayEvents={singleDayEvents} multiDayEvents={multiDayEvents} />}
         {view === "year" && <CalendarYearView allEvents={eventStartDates} />}
         {view === "agenda" && <CalendarAgendaView singleDayEvents={singleDayEvents} multiDayEvents={multiDayEvents} />}
+          </div>
       </DndProviderWrapper>
+      </div>
     </div>
   );
 }

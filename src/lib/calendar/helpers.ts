@@ -53,8 +53,6 @@ export function rangeText(view: TCalendarView, date: Date) {
       start = startOfWeek(date);
       end = endOfWeek(date);
       break;
-    case "day":
-      return format(date, formatString);
     default:
       return "Error while formatting ";
   }
@@ -68,7 +66,6 @@ export function navigateDate(date: Date, view: TCalendarView, direction: "previo
     year: direction === "next" ? addYears : subYears,
     month: direction === "next" ? addMonths : subMonths,
     week: direction === "next" ? addWeeks : subWeeks,
-    day: direction === "next" ? addDays : subDays,
   };
 
   return operations[view](date, 1);
@@ -78,7 +75,6 @@ export function getEventsCount(events: IEvent[], date: Date, view: TCalendarView
   const compareFns = {
     agenda: isSameMonth,
     year: isSameYear,
-    day: isSameDay,
     week: isSameWeek,
     month: isSameMonth,
   };

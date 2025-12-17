@@ -1,15 +1,16 @@
-import { cloneElement, Children, forwardRef, useMemo } from "react";
+import { Children, cloneElement, forwardRef, isValidElement, useMemo } from "react";
 
 import { cn } from "@/lib/utils";
 
-import type { ElementRef, HTMLAttributes, ReactElement } from "react";
+import type { CSSProperties, ElementRef, HTMLAttributes, ReactElement } from "react";
 
 type TAvatarGroupRef = ElementRef<"div">;
 type TAvatarGroupProps = HTMLAttributes<HTMLDivElement> & { max?: number; spacing?: number };
 
 const AvatarGroup = forwardRef<TAvatarGroupRef, TAvatarGroupProps>(
   ({ className, children, max = 1, spacing = 10, ...props }, ref) => {
-    const avatarItems = Children.toArray(children) as ReactElement[];
+    type TAvatarItem = ReactElement<{ className?: string; style?: CSSProperties }>;
+    const avatarItems = Children.toArray(children).filter(isValidElement) as TAvatarItem[];
 
     const renderContent = useMemo(() => {
       return (
@@ -25,7 +26,7 @@ const AvatarGroup = forwardRef<TAvatarGroupRef, TAvatarGroupProps>(
             <div
               className={cn(
                 "relative flex items-center justify-center rounded-full border-2 border-background bg-muted",
-                avatarItems[0].props.className
+                avatarItems[0]?.props.className
               )}
               style={{ marginLeft: -spacing }}
             >

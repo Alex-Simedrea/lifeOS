@@ -39,6 +39,8 @@ import {
 } from '@/components/ui/emoji-picker'
 import { Switch } from '@/components/ui/switch'
 import { CheckCircle2, Circle, Plus, X, Calendar as CalendarIcon, Flag } from 'lucide-react'
+import { TimeInput } from "@/components/ui/time-input";
+import type { TimeValue } from "react-aria-components";
 
 export function TaskForm({ task, tags, onClose }: { task: any; tags: any[]; onClose: () => void }) {
   const createTask = useMutation(api.tasks.create)
@@ -48,7 +50,18 @@ export function TaskForm({ task, tags, onClose }: { task: any; tags: any[]; onCl
   const [title, setTitle] = useState(task?.title ?? '')
   const [notes, setNotes] = useState(task?.notes ?? '')
   const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>(task?.priority ?? 'medium')
-  const [date, setDate] = useState<Date | undefined>(task?.dueAt ? new Date(task.dueAt) : undefined)
+  const [date, setDate] = useState<Date | undefined>(
+    task?.dueAt ? new Date(task.dueAt) : task?.startAt ? new Date(task.startAt) : undefined
+  )
+  const [isScheduled, setIsScheduled] = useState(!!task?.startAt)
+  const [scheduledDate, setScheduledDate] = useState<Date | undefined>(task?.startAt ? new Date(task.startAt) : undefined)
+  const [scheduledTime, setScheduledTime] = useState<{ hour: number; minute: number }>(() => {
+    if (task?.startAt) {
+      const d = new Date(task.startAt)
+      return { hour: d.getHours(), minute: d.getMinutes() }
+    }
+    return { hour: 9, minute: 0 }
+  })
   const [duration, setDuration] = useState(task?.duration?.toString() ?? '')
   const [selectedTags, setSelectedTags] = useState<Id<"tags">[]>(task?.tags ?? [])
   const [subtasks, setSubtasks] = useState<Array<{ id: string; text: string; completed: boolean }>>(
@@ -108,6 +121,13 @@ export function TaskForm({ task, tags, onClose }: { task: any; tags: any[]; onCl
         notes: notes.trim() || undefined,
         priority,
         dueAt: date ? date.getTime() : undefined,
+        startAt: isScheduled && scheduledDate
+          ? (() => {
+              const d = new Date(scheduledDate)
+              d.setHours(scheduledTime.hour, scheduledTime.minute, 0, 0)
+              return d.getTime()
+            })()
+          : undefined,
         duration: duration ? parseInt(duration) : undefined,
         tags: selectedTags,
         recurrence,
@@ -268,6 +288,66 @@ export function TaskForm({ task, tags, onClose }: { task: any; tags: any[]; onCl
                 />
               </PopoverContent>
             </Popover>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="scheduled">Scheduled</Label>
+                <p className="text-sm text-muted-foreground">
+                  Show this task on the calendar at a specific time
+                </p>
+              </div>
+              <Switch id="scheduled" checked={isScheduled} onCheckedChange={setIsScheduled} />
+            </div>
+
+            {isScheduled && (
+              <div className="space-y-4 pl-4 border-l-2 border-primary/20">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="scheduledDate">Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          id="scheduledDate"
+                          className="w-full justify-start text-left font-normal"
+                          type="button"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {scheduledDate ? format(scheduledDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={scheduledDate}
+                          onSelect={setScheduledDate}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="scheduledTime">Time</Label>
+                    <TimeInput
+                      id="scheduledTime"
+                      hourCycle={12}
+                      granularity="minute"
+                      value={scheduledTime as TimeValue}
+                      onChange={setScheduledTime as (value: TimeValue | null) => void}
+                    />
+                  </div>
+                </div>
+
+                <Button type="button" variant="ghost" size="sm" onClick={() => setScheduledDate(undefined)} className="w-full">
+                  Clear scheduled date
+                </Button>
+              </div>
+            )}
           </div>
 
           <Separator />

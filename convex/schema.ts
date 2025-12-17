@@ -96,5 +96,75 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_start_date", ["userId", "startDate"])
     .index("by_date_range", ["userId", "startDate", "endDate"]),
+
+  timerSessions: defineTable({
+    userId: v.string(),
+    tabId: v.string(),
+    type: v.union(
+      v.literal("pomodoro"),
+      v.literal("countdown"),
+      v.literal("stopwatch")
+    ),
+    status: v.union(
+      v.literal("running"),
+      v.literal("completed"),
+      v.literal("cancelled")
+    ),
+    startedAt: v.number(),
+    // For active sessions, endedAt is 0.
+    endedAt: v.number(),
+    // For active sessions, durationMs is 0.
+    durationMs: v.number(),
+    taskId: v.optional(v.id("tasks")),
+    tagIds: v.array(v.id("tags")),
+    note: v.optional(v.string()),
+    endReason: v.optional(
+      v.union(
+        v.literal("completed"),
+        v.literal("stopped"),
+        v.literal("cancelled"),
+        v.literal("navigation"),
+        v.literal("tab_closed"),
+        v.literal("visibility_hidden")
+      )
+    ),
+    config: v.optional(
+      v.union(
+        v.object({
+          kind: v.literal("pomodoro"),
+          workMs: v.number(),
+          breakMs: v.number(),
+          cyclesPlanned: v.number(),
+        }),
+        v.object({
+          kind: v.literal("countdown"),
+          durationMs: v.number(),
+        }),
+        v.object({
+          kind: v.literal("stopwatch"),
+        })
+      )
+    ),
+    result: v.optional(
+      v.union(
+        v.object({
+          kind: v.literal("pomodoro"),
+          cyclesCompleted: v.number(),
+          totalWorkMs: v.number(),
+          totalBreakMs: v.number(),
+        }),
+        v.object({
+          kind: v.literal("countdown"),
+          completed: v.boolean(),
+        }),
+        v.object({
+          kind: v.literal("stopwatch"),
+        })
+      )
+    ),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_endedAt", ["userId", "endedAt"])
+    .index("by_user_tab_status", ["userId", "tabId", "status"]),
 })
 

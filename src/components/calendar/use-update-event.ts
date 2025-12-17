@@ -12,7 +12,22 @@ export function useUpdateEvent() {
   const updateTask = useMutation(api.tasks.update);
 
   const updateEvent = (updated: IEvent) => {
-    setLocalEvents(prev => prev.map(e => (e.id === updated.id ? updated : e)));
+    setLocalEvents(prev =>
+      prev.map(e => {
+        if (updated.convexId && e.convexId && e.convexId === updated.convexId) {
+          return {
+            ...e,
+            ...updated,
+            taskStartAt: updated.kind === "task" ? new Date(updated.startDate).getTime() : e.taskStartAt,
+            taskDuration:
+              updated.kind === "task"
+                ? Math.max(1, Math.round((new Date(updated.endDate).getTime() - new Date(updated.startDate).getTime()) / 60_000))
+                : e.taskDuration,
+          };
+        }
+        return e.id === updated.id ? updated : e;
+      })
+    );
 
     if (updated.kind === "event" && updated.convexId) {
       void updateConvexEvent({

@@ -42,7 +42,7 @@ export const list = query({
           (event.startDate <= args.startDate! && event.endDate >= args.endDate!)
       )
     }
-
+    
     return events.sort((a, b) => a.startDate - b.startDate)
   },
 })
@@ -75,13 +75,13 @@ export const create = mutation({
     notes: v.optional(v.string()),
     color: v.optional(
       v.union(
-        v.literal("blue"),
-        v.literal("green"),
-        v.literal("red"),
-        v.literal("yellow"),
-        v.literal("purple"),
-        v.literal("orange"),
-        v.literal("gray")
+      v.literal("blue"),
+      v.literal("green"),
+      v.literal("red"),
+      v.literal("yellow"),
+      v.literal("purple"),
+      v.literal("orange"),
+      v.literal("gray")
       )
     ),
     recurrence: recurrenceValidator,

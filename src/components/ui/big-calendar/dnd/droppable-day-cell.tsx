@@ -23,6 +23,7 @@ export function DroppableDayCell({ cell, children }: DroppableDayCellProps) {
       accept: ItemTypes.EVENT,
       drop: (item: { event: IEvent }) => {
         const droppedEvent = item.event;
+        if (droppedEvent.isRecurrenceInstance) return { moved: false };
 
         const eventStartDate = parseISO(droppedEvent.startDate);
         const eventEndDate = parseISO(droppedEvent.endDate);

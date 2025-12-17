@@ -150,170 +150,170 @@ export function TasksContent() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Tasks</h1>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Tasks</h1>
           <p className="text-muted-foreground">Organize and track your daily tasks</p>
-        </div>
+          </div>
 
-        <div className="flex gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <Filter className="w-4 h-4" />
-                Filters
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Status</DropdownMenuLabel>
+          <div className="flex gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Filter className="w-4 h-4" />
+                  Filters
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Status</DropdownMenuLabel>
               <DropdownMenuCheckboxItem checked={filters.status?.includes("todo")} onCheckedChange={() => toggleArrayFilter("status", "todo")}>
-                To Do
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={filters.status?.includes("in_progress")} onCheckedChange={() => toggleArrayFilter("status", "in_progress")}>
-                In Progress
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={filters.status?.includes("completed")} onCheckedChange={() => toggleArrayFilter("status", "completed")}>
-                Completed
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={filters.status?.includes("cancelled")} onCheckedChange={() => toggleArrayFilter("status", "cancelled")}>
-                Cancelled
-              </DropdownMenuCheckboxItem>
-
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Priority</DropdownMenuLabel>
-              <DropdownMenuCheckboxItem checked={filters.priority?.includes("urgent")} onCheckedChange={() => toggleArrayFilter("priority", "urgent")}>
-                Urgent
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={filters.priority?.includes("high")} onCheckedChange={() => toggleArrayFilter("priority", "high")}>
-                High
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={filters.priority?.includes("medium")} onCheckedChange={() => toggleArrayFilter("priority", "medium")}>
-                Medium
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={filters.priority?.includes("low")} onCheckedChange={() => toggleArrayFilter("priority", "low")}>
-                Low
-              </DropdownMenuCheckboxItem>
-
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Tags</DropdownMenuLabel>
-              {(tags ?? []).map((tag) => (
-                <DropdownMenuCheckboxItem key={tag._id} checked={filters.tags?.includes(tag._id)} onCheckedChange={() => toggleArrayFilter("tags", tag._id)}>
-                  <span className="mr-2">{tag.emoji}</span>
-                  {tag.name}
+                  To Do
                 </DropdownMenuCheckboxItem>
-              ))}
-
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Other</DropdownMenuLabel>
+              <DropdownMenuCheckboxItem checked={filters.status?.includes("in_progress")} onCheckedChange={() => toggleArrayFilter("status", "in_progress")}>
+                  In Progress
+                </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={filters.status?.includes("completed")} onCheckedChange={() => toggleArrayFilter("status", "completed")}>
+                  Completed
+                </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={filters.status?.includes("cancelled")} onCheckedChange={() => toggleArrayFilter("status", "cancelled")}>
+                  Cancelled
+                </DropdownMenuCheckboxItem>
+                
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Priority</DropdownMenuLabel>
+              <DropdownMenuCheckboxItem checked={filters.priority?.includes("urgent")} onCheckedChange={() => toggleArrayFilter("priority", "urgent")}>
+                  Urgent
+                </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={filters.priority?.includes("high")} onCheckedChange={() => toggleArrayFilter("priority", "high")}>
+                  High
+                </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={filters.priority?.includes("medium")} onCheckedChange={() => toggleArrayFilter("priority", "medium")}>
+                  Medium
+                </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={filters.priority?.includes("low")} onCheckedChange={() => toggleArrayFilter("priority", "low")}>
+                  Low
+                </DropdownMenuCheckboxItem>
+                
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Tags</DropdownMenuLabel>
+                {(tags ?? []).map((tag) => (
+                <DropdownMenuCheckboxItem key={tag._id} checked={filters.tags?.includes(tag._id)} onCheckedChange={() => toggleArrayFilter("tags", tag._id)}>
+                    <span className="mr-2">{tag.emoji}</span>
+                    {tag.name}
+                  </DropdownMenuCheckboxItem>
+                ))}
+                
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Other</DropdownMenuLabel>
               <DropdownMenuCheckboxItem checked={filters.hasDueDate === true} onCheckedChange={() => toggleBooleanFilter("hasDueDate")}>
-                Has Due Date
-              </DropdownMenuCheckboxItem>
+                  Has Due Date
+                </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem checked={filters.hasRecurrence === true} onCheckedChange={() => toggleBooleanFilter("hasRecurrence")}>
-                Has Recurrence
-              </DropdownMenuCheckboxItem>
-
-              <DropdownMenuSeparator />
+                  Has Recurrence
+                </DropdownMenuCheckboxItem>
+                
+                <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setFilters({})}>Clear All Filters</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <ArrowUpDown className="w-4 h-4" />
-                Sort
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-              <DropdownMenuRadioGroup value={sortBy} onValueChange={(v) => setSortBy(v as TaskSortBy)}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <ArrowUpDown className="w-4 h-4" />
+                  Sort
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={sortBy} onValueChange={(v) => setSortBy(v as TaskSortBy)}>
                 <DropdownMenuRadioItem value="createdAt">Created Date</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="priority">Priority</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="dueAt">Due Date</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="duration">Duration</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="alphabetical">Alphabetical</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="status">Status</DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Order</DropdownMenuLabel>
-              <DropdownMenuRadioGroup value={sortOrder} onValueChange={(v) => setSortOrder(v as TaskSortOrder)}>
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Order</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={sortOrder} onValueChange={(v) => setSortOrder(v as TaskSortOrder)}>
                 <DropdownMenuRadioItem value="asc">Ascending</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="desc">Descending</DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => setEditingTask(null)}>
-                <Plus className="w-4 h-4" />
-                New Task
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
-              <TaskForm
-                task={editingTask}
-                tags={tags ?? []}
-                onClose={() => {
-                  setDialogOpen(false);
-                  setEditingTask(null);
-                }}
-              />
-            </DialogContent>
-          </Dialog>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => setEditingTask(null)}>
+                  <Plus className="w-4 h-4" />
+                  New Task
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
+                <TaskForm
+                  task={editingTask}
+                  tags={tags ?? []}
+                  onClose={() => {
+                    setDialogOpen(false);
+                    setEditingTask(null);
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
-      </div>
 
-      <div className="flex gap-4 mb-6">
+        <div className="flex gap-4 mb-6">
         <Tabs value={viewType} onValueChange={(v) => setViewType(v as TaskViewType)} className="w-full">
-          <div className="flex justify-between items-center mb-4">
-            <TabsList>
-              <TabsTrigger value="kanban">
-                <LayoutGrid className="w-4 h-4" />
-                Kanban
-              </TabsTrigger>
-              <TabsTrigger value="table">
-                <TableIcon className="w-4 h-4" />
-                Table
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex justify-between items-center mb-4">
+              <TabsList>
+                <TabsTrigger value="kanban">
+                  <LayoutGrid className="w-4 h-4" />
+                  Kanban
+                </TabsTrigger>
+                <TabsTrigger value="table">
+                  <TableIcon className="w-4 h-4" />
+                  Table
+                </TabsTrigger>
+              </TabsList>
 
             <Select value={groupBy} onValueChange={(v) => setGroupBy(v as TaskGroupBy)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="status">Group by Status</SelectItem>
-                <SelectItem value="priority">Group by Priority</SelectItem>
-                <SelectItem value="tags">Group by Tags</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="status">Group by Status</SelectItem>
+                  <SelectItem value="priority">Group by Priority</SelectItem>
+                  <SelectItem value="tags">Group by Tags</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <TabsContent value="kanban">
-            <TasksKanbanView
-              tasks={filteredAndSortedTasks}
-              tags={tags ?? []}
-              groupBy={groupBy}
-              onEdit={(task) => {
-                setEditingTask(task);
-                setDialogOpen(true);
-              }}
-            />
-          </TabsContent>
+            <TabsContent value="kanban">
+              <TasksKanbanView
+                tasks={filteredAndSortedTasks}
+                tags={tags ?? []}
+                groupBy={groupBy}
+                onEdit={(task) => {
+                  setEditingTask(task);
+                  setDialogOpen(true);
+                }}
+              />
+            </TabsContent>
 
-          <TabsContent value="table">
-            <TasksTableView
-              tasks={filteredAndSortedTasks}
-              tags={tags ?? []}
-              groupBy={groupBy}
-              onEdit={(task) => {
-                setEditingTask(task);
-                setDialogOpen(true);
-              }}
-            />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="table">
+              <TasksTableView
+                tasks={filteredAndSortedTasks}
+                tags={tags ?? []}
+                groupBy={groupBy}
+                onEdit={(task) => {
+                  setEditingTask(task);
+                  setDialogOpen(true);
+                }}
+              />
+            </TabsContent>
+          </Tabs>
       </div>
     </div>
   );

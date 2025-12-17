@@ -1,5 +1,6 @@
 import { cva } from "class-variance-authority";
 import { format, differenceInMinutes, parseISO } from "date-fns";
+import { CheckSquare2 } from "lucide-react";
 
 import { useCalendar } from "@/components/calendar/calendar-context";
 
@@ -56,7 +57,11 @@ export function EventBlock({ event, className }: IProps) {
 
   const color = (badgeVariant === "dot" ? `${event.color}-dot` : event.color) as VariantProps<typeof calendarWeekEventCardVariants>["color"];
 
-  const calendarWeekEventCardClasses = cn(calendarWeekEventCardVariants({ color, className }), durationInMinutes < 35 && "py-0 justify-center");
+  const calendarWeekEventCardClasses = cn(
+    calendarWeekEventCardVariants({ color, className }),
+    durationInMinutes < 35 && "py-0 justify-center",
+    event.kind === "task" && "border-dashed"
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -70,6 +75,7 @@ export function EventBlock({ event, className }: IProps) {
       <EventDetailsDialog event={event}>
         <div role="button" tabIndex={0} className={calendarWeekEventCardClasses} style={{ height: `${heightInPixels}px` }} onKeyDown={handleKeyDown}>
           <div className="flex items-center gap-1.5 truncate">
+            {event.kind === "task" && <CheckSquare2 className="size-3 shrink-0" />}
             {["mixed", "dot"].includes(badgeVariant) && (
               <svg width="8" height="8" viewBox="0 0 8 8" className="event-dot shrink-0">
                 <circle cx="4" cy="4" r="4" />

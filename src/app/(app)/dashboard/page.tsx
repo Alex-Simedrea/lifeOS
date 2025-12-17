@@ -22,53 +22,53 @@ function DashboardContent() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
         <p className="text-muted-foreground">Here's what's happening with your life today.</p>
-      </div>
+        </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard title="Tasks Today" value="0" subtitle="Nothing yet" trend="+0%" />
         <StatCard title="Active Habits" value="0" subtitle="Start building" trend="+0%" />
         <StatCard title="Water Intake" value="0L" subtitle="Stay hydrated" trend="+0%" />
         <StatCard title="Workout Streak" value="0" subtitle="days" trend="+0%" />
-      </div>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Today's Schedule</CardTitle>
-            <CardDescription>Your events and appointments</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center h-48 text-muted-foreground">
-              <p>No events scheduled for today</p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Today's Schedule</CardTitle>
+              <CardDescription>Your events and appointments</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-center h-48 text-muted-foreground">
+                <p>No events scheduled for today</p>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Navigate to your features</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {quickLinks.map((link) => {
-              const Icon = link.icon
-              return (
-                <Link key={link.href} href={link.href}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+              <CardDescription>Navigate to your features</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {quickLinks.map((link) => {
+                const Icon = link.icon
+                return (
+                  <Link key={link.href} href={link.href}>
                   <Button variant="ghost" className="w-full justify-start group">
-                    <div className={`w-8 h-8 rounded-lg ${link.bgColor} flex items-center justify-center mr-3`}>
-                      <Icon className={`w-4 h-4 ${link.color}`} />
-                    </div>
-                    <span className="flex-1 text-left font-medium">{link.label}</span>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
-              )
-            })}
-          </CardContent>
-        </Card>
+                      <div className={`w-8 h-8 rounded-lg ${link.bgColor} flex items-center justify-center mr-3`}>
+                        <Icon className={`w-4 h-4 ${link.color}`} />
+                      </div>
+                      <span className="flex-1 text-left font-medium">{link.label}</span>
+                      <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                )
+              })}
+            </CardContent>
+          </Card>
       </div>
     </div>
   )

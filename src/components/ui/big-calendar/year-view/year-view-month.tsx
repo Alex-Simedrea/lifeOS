@@ -13,7 +13,7 @@ interface IProps {
 }
 
 export function YearViewMonth({ month, events }: IProps) {
-  const { setSelectedDate } = useCalendar();
+  const { setSelectedDate, setView } = useCalendar();
 
   const monthName = format(month, "MMMM");
 
@@ -31,6 +31,7 @@ export function YearViewMonth({ month, events }: IProps) {
 
   const handleClick = () => {
     setSelectedDate(new Date(month.getFullYear(), month.getMonth(), 1));
+    setView("month");
   };
 
   return (

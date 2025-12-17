@@ -21,7 +21,7 @@ interface IProps {
 const MAX_VISIBLE_EVENTS = 3;
 
 export function DayCell({ cell, events, eventPositions }: IProps) {
-  const { setSelectedDate } = useCalendar();
+  const { setSelectedDate, setView } = useCalendar();
 
   const { day, currentMonth, date } = cell;
 
@@ -30,6 +30,7 @@ export function DayCell({ cell, events, eventPositions }: IProps) {
 
   const handleClick = () => {
     setSelectedDate(date);
+    setView("week");
   };
 
   return (
