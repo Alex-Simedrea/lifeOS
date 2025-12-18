@@ -1,5 +1,18 @@
 import ConvexClientProvider from "@/providers/convex-client-provider";
+import { ClerkProvider } from "@clerk/nextjs";
+import { ThemeProvider } from "next-themes";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <ConvexClientProvider>{children}</ConvexClientProvider>;
+  return (
+    <ClerkProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <ConvexClientProvider>{children}</ConvexClientProvider>
+      </ThemeProvider>
+    </ClerkProvider>
+  );
 }

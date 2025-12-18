@@ -43,25 +43,32 @@ export function CalendarProvider({
   events,
   view,
   setView,
+  selectedDate: controlledSelectedDate,
+  onSelectedDateChange,
 }: {
   children: React.ReactNode;
   users: IUser[];
   events: IEvent[];
   view: TCalendarView;
   setView: (view: TCalendarView) => void;
+  selectedDate?: Date;
+  onSelectedDateChange?: (date: Date | undefined) => void;
 }) {
   const [badgeVariant, setBadgeVariant] = useState<TBadgeVariant>("colored");
   const [visibleHours, setVisibleHours] = useState<TVisibleHours>(VISIBLE_HOURS);
   const [workingHours, setWorkingHours] = useState<TWorkingHours>(WORKING_HOURS);
 
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [uncontrolledSelectedDate, setUncontrolledSelectedDate] = useState(new Date());
   const [selectedUserId, setSelectedUserId] = useState<IUser["id"] | "all">("all");
   const [localEvents, setLocalEvents] = useState<IEvent[]>(events);
 
   const handleSelectDate = (date: Date | undefined) => {
     if (!date) return;
-    setSelectedDate(date);
+    if (onSelectedDateChange) onSelectedDateChange(date);
+    else setUncontrolledSelectedDate(date);
   };
+
+  const selectedDate = controlledSelectedDate ?? uncontrolledSelectedDate;
 
   useEffect(() => {
     setLocalEvents(events);

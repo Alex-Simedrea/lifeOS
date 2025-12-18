@@ -36,6 +36,33 @@ import type { TCalendarView } from "@/lib/calendar/types";
 
 interface IProps {
   view: TCalendarView;
+  dailyHabitsByDay?: null | Array<{
+    date: Date;
+    habits: Array<{
+      habitId: any;
+      name: string;
+      emoji: string;
+      color: string;
+      done: number;
+      target: number;
+    }>;
+  }>;
+  weeklyHabits?: null | Array<{
+    habitId: any;
+    name: string;
+    emoji: string;
+    color: string;
+    done: number;
+    target: number;
+  }>;
+  monthlyHabits?: null | Array<{
+    habitId: any;
+    name: string;
+    emoji: string;
+    color: string;
+    done: number;
+    target: number;
+  }>;
 }
 
 function makeOccurrenceId(baseId: number, start: Date) {
@@ -71,7 +98,7 @@ function expandRecurring(events: ReturnType<typeof useCalendar>["events"], range
       if (occEnd < rangeStart || occStart > rangeEnd) return;
       expanded.push({
         ...event,
-        id: makeOccurrenceId(event.id, occStart),
+        id: makeOccurrenceId(+event.id, occStart),
         seriesStartDate: event.seriesStartDate ?? event.startDate,
         seriesEndDate: event.seriesEndDate ?? event.endDate,
         startDate: occStart.toISOString(),
@@ -151,7 +178,7 @@ function expandRecurring(events: ReturnType<typeof useCalendar>["events"], range
   return expanded;
 }
 
-export function ClientContainer({ view }: IProps) {
+export function ClientContainer({ view, dailyHabitsByDay, weeklyHabits, monthlyHabits }: IProps) {
   const { selectedDate, selectedUserId, events } = useCalendar();
 
   const range = useMemo(() => {
@@ -213,9 +240,6 @@ export function ClientContainer({ view }: IProps) {
     return !isSameDay(startDate, endDate);
   });
 
-  // For year view, we only care about the start date
-  // by using the same date for both start and end,
-  // we ensure only the start day will show a dot
   const eventStartDates = useMemo(() => {
     return filteredEvents.map(event => ({ ...event, endDate: event.startDate }));
   }, [filteredEvents]);
@@ -227,8 +251,15 @@ export function ClientContainer({ view }: IProps) {
       <div className="min-h-0 flex-1">
       <DndProviderWrapper>
           <div className="h-full overflow-auto">
-        {view === "month" && <CalendarMonthView singleDayEvents={singleDayEvents} multiDayEvents={multiDayEvents} />}
-        {view === "week" && <CalendarWeekView singleDayEvents={singleDayEvents} multiDayEvents={multiDayEvents} />}
+        {view === "month" && <CalendarMonthView singleDayEvents={singleDayEvents} multiDayEvents={multiDayEvents} monthlyHabits={monthlyHabits ?? null} />}
+        {view === "week" && (
+          <CalendarWeekView
+            singleDayEvents={singleDayEvents.filter(e => e.kind !== "habit")}
+            multiDayEvents={multiDayEvents}
+            dailyHabitsByDay={dailyHabitsByDay ?? null}
+            weeklyHabits={weeklyHabits ?? null}
+          />
+        )}
         {view === "year" && <CalendarYearView allEvents={eventStartDates} />}
         {view === "agenda" && <CalendarAgendaView singleDayEvents={singleDayEvents} multiDayEvents={multiDayEvents} />}
           </div>

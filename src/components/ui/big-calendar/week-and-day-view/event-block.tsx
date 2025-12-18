@@ -1,6 +1,6 @@
 import { cva } from "class-variance-authority";
 import { format, differenceInMinutes, parseISO } from "date-fns";
-import { CheckSquare2 } from "lucide-react";
+import { CheckSquare2, Sparkles } from "lucide-react";
 
 import { useCalendar } from "@/components/calendar/calendar-context";
 
@@ -60,7 +60,8 @@ export function EventBlock({ event, className }: IProps) {
   const calendarWeekEventCardClasses = cn(
     calendarWeekEventCardVariants({ color, className }),
     durationInMinutes < 35 && "py-0 justify-center",
-    event.kind === "task" && "border-dashed"
+    event.kind === "task" && "border-dashed",
+    event.kind === "habit" && "border-dotted"
   );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -76,6 +77,7 @@ export function EventBlock({ event, className }: IProps) {
         <div role="button" tabIndex={0} className={calendarWeekEventCardClasses} style={{ height: `${heightInPixels}px` }} onKeyDown={handleKeyDown}>
           <div className="flex items-center gap-1.5 truncate">
             {event.kind === "task" && <CheckSquare2 className="size-3 shrink-0" />}
+            {event.kind === "habit" && <Sparkles className="size-3 shrink-0" />}
             {["mixed", "dot"].includes(badgeVariant) && (
               <svg width="8" height="8" viewBox="0 0 8 8" className="event-dot shrink-0">
                 <circle cx="4" cy="4" r="4" />

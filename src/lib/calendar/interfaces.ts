@@ -3,7 +3,7 @@ import type { Id } from "../../../convex/_generated/dataModel";
 
 // Interface for big-calendar components (uses ISO string dates and simpler structure)
 export interface IEvent {
-  id: number;
+  id: number | string;
   startDate: string;
   endDate: string;
   seriesStartDate?: string;
@@ -12,8 +12,8 @@ export interface IEvent {
   color: TEventColor;
   description: string;
   user: IUser;
-  kind?: "event" | "task";
-  convexId?: Id<"events"> | Id<"tasks">;
+  kind?: "event" | "task" | "habit";
+  convexId?: Id<"events"> | Id<"tasks"> | Id<"habits">;
   isRecurrenceInstance?: boolean;
   taskPriority?: "low" | "medium" | "high" | "urgent";
   taskStatus?: "todo" | "in_progress" | "completed" | "cancelled";

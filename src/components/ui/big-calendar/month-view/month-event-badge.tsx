@@ -1,6 +1,6 @@
 import { cva } from "class-variance-authority";
 import { endOfDay, format, isSameDay, parseISO, startOfDay } from "date-fns";
-import { CheckSquare2 } from "lucide-react";
+import { CheckSquare2, Sparkles } from "lucide-react";
 
 import { useCalendar } from "@/components/calendar/calendar-context";
 
@@ -85,7 +85,11 @@ export function MonthEventBadge({ event, cellDate, eventCurrentDay, eventTotalDa
 
   const color = (badgeVariant === "dot" ? `${event.color}-dot` : event.color) as VariantProps<typeof eventBadgeVariants>["color"];
 
-  const eventBadgeClasses = cn(eventBadgeVariants({ color, multiDayPosition: position, className }), event.kind === "task" && "border-dashed");
+  const eventBadgeClasses = cn(
+    eventBadgeVariants({ color, multiDayPosition: position, className }),
+    event.kind === "task" && "border-dashed",
+    event.kind === "habit" && "border-dotted"
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -100,6 +104,7 @@ export function MonthEventBadge({ event, cellDate, eventCurrentDay, eventTotalDa
         <div role="button" tabIndex={0} className={eventBadgeClasses} onKeyDown={handleKeyDown}>
           <div className="flex items-center gap-1.5 truncate">
             {event.kind === "task" && <CheckSquare2 className="size-3 shrink-0" />}
+            {event.kind === "habit" && <Sparkles className="size-3 shrink-0" />}
             {!["middle", "last"].includes(position) && ["mixed", "dot"].includes(badgeVariant) && (
               <svg width="8" height="8" viewBox="0 0 8 8" className="event-dot shrink-0">
                 <circle cx="4" cy="4" r="4" />

@@ -111,9 +111,7 @@ export default defineSchema({
       v.literal("cancelled")
     ),
     startedAt: v.number(),
-    // For active sessions, endedAt is 0.
     endedAt: v.number(),
-    // For active sessions, durationMs is 0.
     durationMs: v.number(),
     taskId: v.optional(v.id("tasks")),
     tagIds: v.array(v.id("tags")),
@@ -166,5 +164,46 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_endedAt", ["userId", "endedAt"])
     .index("by_user_tab_status", ["userId", "tabId", "status"]),
+
+  habits: defineTable({
+    userId: v.string(),
+    name: v.string(),
+    description: v.optional(v.string()),
+    emoji: v.string(),
+    color: v.string(),
+    frequency: v.object({
+      type: v.union(
+        v.literal("daily"),
+        v.literal("weekly"),
+        v.literal("custom")
+      ),
+      times: v.number(),
+      period: v.union(
+        v.literal("day"),
+        v.literal("week"),
+        v.literal("month")
+      ),
+    }),
+    target: v.optional(v.object({
+      value: v.number(),
+      unit: v.string(),
+    })),
+    archived: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_archived", ["userId", "archived"]),
+
+  habitCheckins: defineTable({
+    userId: v.string(),
+    habitId: v.id("habits"),
+    timestamp: v.number(),
+    value: v.optional(v.number()),
+    note: v.optional(v.string()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_habit", ["habitId", "timestamp"])
+    .index("by_user_date", ["userId", "timestamp"]),
 })
 
