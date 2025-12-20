@@ -95,11 +95,10 @@ const HABIT_COLOR_PRESETS: Array<{ label: string; hex: string }> = [
 
 const HABIT_TEMPLATES = [
   {
-    name: "Drink Water",
-    emoji: "💧",
+    name: "Take Vitamins",
+    emoji: "💊",
     color: "#06b6d4",
-    frequency: { type: "daily" as const, times: 8, period: "day" as const },
-    target: { value: 8, unit: "glasses" },
+    frequency: { type: "daily" as const, times: 1, period: "day" as const },
   },
   {
     name: "Exercise",

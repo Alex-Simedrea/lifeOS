@@ -9,7 +9,9 @@
  */
 
 import type * as events from "../events.js";
+import type * as food from "../food.js";
 import type * as habits from "../habits.js";
+import type * as hydration from "../hydration.js";
 import type * as tags from "../tags.js";
 import type * as tasks from "../tasks.js";
 import type * as timers from "../timers.js";
@@ -22,7 +24,9 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   events: typeof events;
+  food: typeof food;
   habits: typeof habits;
+  hydration: typeof hydration;
   tags: typeof tags;
   tasks: typeof tasks;
   timers: typeof timers;

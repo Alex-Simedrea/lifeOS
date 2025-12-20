@@ -205,5 +205,44 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_habit", ["habitId", "timestamp"])
     .index("by_user_date", ["userId", "timestamp"]),
+
+  hydrationSettings: defineTable({
+    userId: v.string(),
+    dailyGoalMl: v.number(),
+    bottlePresets: v.array(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  hydrationEntries: defineTable({
+    userId: v.string(),
+    amountMl: v.number(),
+    timestamp: v.number(),
+    note: v.optional(v.string()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_date", ["userId", "timestamp"]),
+
+  foodEntries: defineTable({
+    userId: v.string(),
+    name: v.string(),
+    mealType: v.union(
+      v.literal("breakfast"),
+      v.literal("lunch"),
+      v.literal("dinner"),
+      v.literal("snack")
+    ),
+    notes: v.optional(v.string()),
+    calories: v.optional(v.number()),
+    protein: v.optional(v.number()),
+    carbs: v.optional(v.number()),
+    fat: v.optional(v.number()),
+    fiber: v.optional(v.number()),
+    timestamp: v.number(),
+    isFavorite: v.boolean(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_date", ["userId", "timestamp"])
+    .index("by_user_favorites", ["userId", "isFavorite"]),
 })
 
