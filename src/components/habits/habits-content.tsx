@@ -7,11 +7,8 @@ import {
   Plus,
   Check,
   Flame,
-  TrendingUp,
-  Calendar as CalendarIcon,
   Edit,
   Trash2,
-  Archive,
   MoreVertical,
   Trophy,
   Target,
@@ -78,8 +75,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { EmojiPicker, EmojiPickerContent, EmojiPickerFooter, EmojiPickerSearch } from "@/components/ui/emoji-picker";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  EmojiPicker,
+  EmojiPickerContent,
+  EmojiPickerFooter,
+  EmojiPickerSearch,
+} from "@/components/ui/emoji-picker";
 import { cn } from "@/lib/utils";
 
 const HABIT_COLOR_PRESETS: Array<{ label: string; hex: string }> = [
@@ -161,9 +167,7 @@ export function HabitsContent() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<any>(null);
-  const [deleteHabitId, setDeleteHabitId] = useState<Id<"habits"> | null>(
-    null
-  );
+  const [deleteHabitId, setDeleteHabitId] = useState<Id<"habits"> | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -426,9 +430,7 @@ export function HabitsContent() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Habit</DialogTitle>
-            <DialogDescription>
-              Update your habit settings
-            </DialogDescription>
+            <DialogDescription>Update your habit settings</DialogDescription>
           </DialogHeader>
           <HabitForm
             formData={formData}
@@ -492,9 +494,7 @@ function HabitForm({
           <Input
             placeholder="e.g., Morning Exercise"
             value={formData.name}
-            onChange={(e) =>
-              setFormData({ ...formData, name: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           />
         </div>
 
@@ -626,7 +626,8 @@ function HabitCard({
   const periodStart = useMemo(() => {
     const now = new Date();
     if (period === "day") return startOfDay(now).getTime();
-    if (period === "week") return startOfWeek(now, { weekStartsOn: 1 }).getTime();
+    if (period === "week")
+      return startOfWeek(now, { weekStartsOn: 1 }).getTime();
     return startOfMonth(now).getTime();
   }, [period]);
 
@@ -638,7 +639,9 @@ function HabitCard({
 
   const checkinsInPeriod = useMemo(() => {
     if (!checkins) return [];
-    return checkins.filter((c) => c.timestamp >= periodStart && c.timestamp < periodEnd);
+    return checkins.filter(
+      (c) => c.timestamp >= periodStart && c.timestamp < periodEnd
+    );
   }, [checkins, periodStart, periodEnd]);
 
   const canCheckin = checkinsInPeriod.length < timesRequired;
@@ -667,27 +670,36 @@ function HabitCard({
     if (!checkins) return [];
     const now = new Date();
     if (period === "week") {
-      const weeks = Array.from({ length: 8 }, (_, i) => startOfWeek(subWeeks(now, 7 - i), { weekStartsOn: 1 }));
+      const weeks = Array.from({ length: 8 }, (_, i) =>
+        startOfWeek(subWeeks(now, 7 - i), { weekStartsOn: 1 })
+      );
       return weeks.map((ws) => {
         const start = ws.getTime();
         const end = addWeeks(ws, 1).getTime();
-        const done = checkins.filter((c) => c.timestamp >= start && c.timestamp < end).length;
+        const done = checkins.filter(
+          (c) => c.timestamp >= start && c.timestamp < end
+        ).length;
         return { label: format(ws, "MMM d"), done, target: timesRequired };
       });
     }
     if (period === "month") {
-      const months = Array.from({ length: 6 }, (_, i) => startOfMonth(subMonths(now, 5 - i)));
+      const months = Array.from({ length: 6 }, (_, i) =>
+        startOfMonth(subMonths(now, 5 - i))
+      );
       return months.map((ms) => {
         const start = ms.getTime();
         const end = addMonths(ms, 1).getTime();
-        const done = checkins.filter((c) => c.timestamp >= start && c.timestamp < end).length;
+        const done = checkins.filter(
+          (c) => c.timestamp >= start && c.timestamp < end
+        ).length;
         return { label: format(ms, "MMM"), done, target: timesRequired };
       });
     }
     return [];
   }, [checkins, period, timesRequired]);
 
-  const periodLabel = period === "day" ? "Today" : period === "week" ? "This week" : "This month";
+  const periodLabel =
+    period === "day" ? "Today" : period === "week" ? "This week" : "This month";
 
   const handleCheckin = async () => {
     if (!canCheckin) return;
@@ -696,10 +708,6 @@ function HabitCard({
 
   return (
     <Card className="relative overflow-hidden">
-      <div
-        className="absolute top-0 left-0 right-0 h-1"
-        style={{ backgroundColor: habit.color }}
-      />
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -776,7 +784,9 @@ function HabitCard({
 
         <div>
           <div className="flex items-center justify-between mb-2 text-sm">
-            <span className="text-muted-foreground">{periodLabel} progress</span>
+            <span className="text-muted-foreground">
+              {periodLabel} progress
+            </span>
             <span className="font-medium">
               {checkinsInPeriod.length} / {timesRequired}
             </span>
@@ -809,7 +819,7 @@ function HabitCard({
                           : undefined,
                     }}
                     className={cn(
-                      "aspect-square rounded flex flex-col items-center justify-center text-xs",
+                      "aspect-square rounded-lg flex flex-col items-center justify-center text-xs",
                       !completed && day.count === 0 && "bg-muted"
                     )}
                   >
@@ -835,7 +845,12 @@ function HabitCard({
             <p className="text-xs text-muted-foreground mb-2">
               {period === "week" ? "Last 8 weeks" : "Last 6 months"}
             </p>
-            <div className={cn("grid gap-1", period === "week" ? "grid-cols-8" : "grid-cols-6")}>
+            <div
+              className={cn(
+                "grid gap-1",
+                period === "week" ? "grid-cols-8" : "grid-cols-6"
+              )}
+            >
               {recentPeriods.map((p) => {
                 const completed = p.done >= p.target;
                 const partial = p.done > 0 && !completed;
@@ -844,14 +859,25 @@ function HabitCard({
                     key={p.label}
                     title={`${p.label}: ${p.done}/${p.target}`}
                     style={{
-                      backgroundColor: completed ? habit.color : partial ? `${habit.color}40` : undefined,
+                      backgroundColor: completed
+                        ? habit.color
+                        : partial
+                          ? `${habit.color}40`
+                          : undefined,
                     }}
                     className={cn(
-                      "aspect-square rounded flex items-center justify-center",
+                      "aspect-square rounded-lg flex items-center justify-center",
                       !completed && !partial && "bg-muted"
                     )}
                   >
-                    <span className={cn("text-[10px] font-semibold", completed || partial ? "text-white" : "text-muted-foreground")}>
+                    <span
+                      className={cn(
+                        "text-[10px] font-semibold",
+                        completed || partial
+                          ? "text-white"
+                          : "text-muted-foreground"
+                      )}
+                    >
                       {period === "week" ? "W" : p.label[0]}
                     </span>
                   </div>
@@ -868,7 +894,10 @@ function HabitCard({
 function AnalyticsView({ habits }: { habits: any[] }) {
   const start = startOfMonth(new Date()).getTime();
   const end = Date.now();
-  const analytics = useQuery(api.habits.analyticsSummary, { startDate: start, endDate: end });
+  const analytics = useQuery(api.habits.analyticsSummary, {
+    startDate: start,
+    endDate: end,
+  });
 
   return (
     <div className="px-4 py-8">
@@ -887,7 +916,9 @@ function AnalyticsView({ habits }: { habits: any[] }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold">{analytics?.totals.totalCheckins ?? 0}</div>
+            <div className="text-4xl font-bold">
+              {analytics?.totals.totalCheckins ?? 0}
+            </div>
             <p className="text-xs text-muted-foreground mt-2">
               Across all habits
             </p>
@@ -901,7 +932,9 @@ function AnalyticsView({ habits }: { habits: any[] }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold">{analytics?.totals.uniqueDays ?? 0}</div>
+            <div className="text-4xl font-bold">
+              {analytics?.totals.uniqueDays ?? 0}
+            </div>
             <p className="text-xs text-muted-foreground mt-2">
               Days you've completed at least one habit
             </p>
@@ -917,7 +950,9 @@ function AnalyticsView({ habits }: { habits: any[] }) {
           <CardContent>
             <div className="flex items-center gap-2">
               <Flame className="h-8 w-8 text-orange-500" />
-              <div className="text-4xl font-bold">{analytics?.totals.longestStreak ?? 0}</div>
+              <div className="text-4xl font-bold">
+                {analytics?.totals.longestStreak ?? 0}
+              </div>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
               Your personal best
@@ -953,7 +988,8 @@ function AnalyticsView({ habits }: { habits: any[] }) {
                     <div>
                       <div className="font-medium">{row.name}</div>
                       <div className="text-sm text-muted-foreground">
-                        {row.monthActualCheckins} / {row.expectedCheckins} check-ins
+                        {row.monthActualCheckins} / {row.expectedCheckins}{" "}
+                        check-ins
                       </div>
                     </div>
                   </div>

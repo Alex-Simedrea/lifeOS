@@ -40,6 +40,7 @@ import { api } from "../../../convex/_generated/api";
 import { FavoritesSection } from "./favorites-section";
 import { FoodForm } from "./food-form";
 import { MealSection } from "./meal-section";
+import { FoodSettingsDialog } from "./food-settings-dialog";
 import type {
   DailySummary,
   DailyTotals,
@@ -52,6 +53,7 @@ import type {
   WeeklySummaryDay,
 } from "./types";
 import { WeeklyTrendsSection } from "./weekly-trends";
+import { cn } from "@/lib/utils";
 
 const MEAL_TYPES: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
 
@@ -81,7 +83,7 @@ const EMPTY_BY_MEAL_TYPE: MealsByType = {
 };
 
 const createEmptyFormData = (
-  overrides: Partial<FoodFormData> = {},
+  overrides: Partial<FoodFormData> = {}
 ): FoodFormData => ({
   name: "",
   mealType: "breakfast",
@@ -102,7 +104,7 @@ export function FoodContent() {
   const [deleteEntryId, setDeleteEntryId] = useState<FoodEntryId | null>(null);
   const [editingEntry, setEditingEntry] = useState<FoodEntry | null>(null);
   const [formData, setFormData] = useState<FoodFormData>(() =>
-    createEmptyFormData(),
+    createEmptyFormData()
   );
   const [tab, setTab] = useState<TabValue>("meals");
 
@@ -126,9 +128,23 @@ export function FoodContent() {
         entries: [],
         byMealType: EMPTY_BY_MEAL_TYPE,
         totals: EMPTY_TOTALS,
+        goals: {
+          calories: 2000,
+          protein: 150,
+          carbs: 250,
+          fat: 65,
+          fiber: 25,
+        },
+        percentages: {
+          calories: 0,
+          protein: 0,
+          carbs: 0,
+          fat: 0,
+          fiber: 0,
+        },
         entriesCount: 0,
       },
-    [dailySummary],
+    [dailySummary]
   );
 
   const isToday = useMemo(() => {
@@ -214,7 +230,7 @@ export function FoodContent() {
 
   const handleQuickAddFromFavorite = async (
     favoriteId: FoodEntryId,
-    mealType: MealType,
+    mealType: MealType
   ) => {
     await addFromFavorite({
       favoriteId,
@@ -241,7 +257,7 @@ export function FoodContent() {
       />
 
       <div className="px-4 py-8">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6">
+        <div className="flex flex-col gap-6">
           {!isToday && (
             <DateBanner
               selectedDate={selectedDate}
@@ -251,7 +267,11 @@ export function FoodContent() {
             />
           )}
 
-          <TotalsGrid totals={normalizedDailySummary.totals} />
+          <TotalsGrid
+            totals={normalizedDailySummary.totals}
+            goals={normalizedDailySummary.goals}
+            percentages={normalizedDailySummary.percentages}
+          />
 
           {tab === "meals" && (
             <div className="space-y-6">
@@ -285,7 +305,7 @@ export function FoodContent() {
                   MEAL_TYPES.map((mealType) => [
                     mealType,
                     MEAL_CONFIG[mealType].icon,
-                  ]),
+                  ])
                 ) as Record<MealType, LucideIcon>
               }
               onQuickAdd={handleQuickAddFromFavorite}
@@ -380,6 +400,7 @@ function FoodHeader({
             <TrendingUp className="h-4 w-4" />
             Analytics
           </Button>
+          <FoodSettingsDialog />
         </div>
       </div>
     </div>
@@ -395,7 +416,7 @@ function DateBanner({
 }) {
   return (
     <Card className="bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800">
-      <CardContent className="py-4 flex items-center justify-between">
+      <CardContent className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <CalendarIcon className="h-4 w-4 text-orange-600" />
           <span className="text-sm font-medium">
@@ -410,63 +431,134 @@ function DateBanner({
   );
 }
 
-function TotalsGrid({ totals }: { totals: DailyTotals }) {
+function TotalsGrid({
+  totals,
+  goals,
+  percentages,
+}: {
+  totals: DailyTotals;
+  goals: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber: number;
+  };
+  percentages: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber: number;
+  };
+}) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-      <Card className="md:col-span-1">
-        <CardContent className="py-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-950 flex items-center justify-center">
-              <Flame className="h-5 w-5 text-orange-500" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold">
-                {Math.round(totals.calories)}
-              </div>
-              <p className="text-xs text-muted-foreground">Calories</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+      <TotalsCardWithProgress
+        value={Math.round(totals.calories)}
+        goal={goals.calories}
+        percentage={percentages.calories}
+        label="Calories"
+        unit="kcal"
+        icon={Flame}
+        iconColor="text-orange-500"
+        bgColor="bg-orange-100 dark:bg-orange-950"
+        accent="text-orange-600"
+        className="md:col-span-2"
+      />
 
-      <TotalsCard
-        value={`${Math.round(totals.protein)}g`}
+      <TotalsCardWithProgress
+        value={Math.round(totals.protein)}
+        goal={goals.protein}
+        percentage={percentages.protein}
         label="Protein"
+        unit="g"
         accent="text-blue-600"
       />
-      <TotalsCard
-        value={`${Math.round(totals.carbs)}g`}
+      <TotalsCardWithProgress
+        value={Math.round(totals.carbs)}
+        goal={goals.carbs}
+        percentage={percentages.carbs}
         label="Carbs"
+        unit="g"
         accent="text-yellow-600"
       />
-      <TotalsCard
-        value={`${Math.round(totals.fat)}g`}
+      <TotalsCardWithProgress
+        value={Math.round(totals.fat)}
+        goal={goals.fat}
+        percentage={percentages.fat}
         label="Fat"
+        unit="g"
         accent="text-purple-600"
       />
-      <TotalsCard
-        value={`${Math.round(totals.fiber)}g`}
+      <TotalsCardWithProgress
+        value={Math.round(totals.fiber)}
+        goal={goals.fiber}
+        percentage={percentages.fiber}
         label="Fiber"
+        unit="g"
         accent="text-green-600"
       />
     </div>
   );
 }
 
-function TotalsCard({
+function TotalsCardWithProgress({
   value,
+  goal,
+  percentage,
   label,
+  unit,
+  icon: Icon,
+  iconColor,
+  bgColor,
   accent,
+  className = "",
 }: {
-  value: string;
+  value: number;
+  goal: number;
+  percentage: number;
   label: string;
+  unit: string;
+  icon?: LucideIcon;
+  iconColor?: string;
+  bgColor?: string;
   accent: string;
+  className?: string;
 }) {
   return (
-    <Card>
-      <CardContent className="py-6 text-center">
-        <div className={`text-2xl font-bold ${accent}`}>{value}</div>
-        <p className="text-xs text-muted-foreground mt-1">{label}</p>
+    <Card className={cn("flex flex-col gap-2 py-4", className)}>
+      <CardContent>
+        <p className={cn("text-sm font-medium brightness-150", accent)}>
+          {label}
+        </p>
+        <div className={`text-2xl font-bold ${accent}`}>
+          {value}
+          <span className="text-sm font-normal text-muted-foreground ml-1">
+            / {goal} {unit}
+          </span>
+        </div>
+        <div className="w-full bg-muted rounded-full h-2 mt-2">
+          <div
+            className={cn(
+              "h-2 rounded-full transition-all duration-500",
+              percentage >= 100
+                ? "bg-green-500"
+                : accent === "text-orange-600"
+                  ? "bg-orange-500"
+                  : accent === "text-blue-600"
+                    ? "bg-blue-500"
+                    : accent === "text-yellow-600"
+                      ? "bg-yellow-500"
+                      : accent === "text-purple-600"
+                        ? "bg-purple-500"
+                        : accent === "text-green-600"
+                          ? "bg-green-500"
+                          : "bg-primary"
+            )}
+            style={{ width: `${Math.min(100, percentage)}%` }}
+          />
+        </div>
       </CardContent>
     </Card>
   );

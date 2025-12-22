@@ -17,7 +17,7 @@ export function DateNavigationBanner({
 }: DateNavigationBannerProps) {
   return (
     <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-      <CardContent className="py-4 flex items-center justify-between">
+      <CardContent className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <CalendarIcon className="h-4 w-4 text-blue-600" />
           <span className="text-sm font-medium">

@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
-// Helper functions
 function startOfDayMs(ts: number) {
   const d = new Date(ts);
   d.setHours(0, 0, 0, 0);
@@ -21,7 +20,82 @@ const mealTypeValidator = v.union(
   v.literal("snack")
 );
 
-// Add food entry
+export const getSettings = query({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const settings = await ctx.db
+      .query("foodSettings")
+      .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+      .first();
+
+    if (!settings) {
+      return {
+        userId: identity.subject,
+        dailyGoalCalories: 2000,
+        dailyGoalProtein: 150,
+        dailyGoalCarbs: 250,
+        dailyGoalFat: 65,
+        dailyGoalFiber: 25,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+    }
+
+    return settings;
+  },
+});
+
+export const updateSettings = mutation({
+  args: {
+    dailyGoalCalories: v.optional(v.number()),
+    dailyGoalProtein: v.optional(v.number()),
+    dailyGoalCarbs: v.optional(v.number()),
+    dailyGoalFat: v.optional(v.number()),
+    dailyGoalFiber: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const existing = await ctx.db
+      .query("foodSettings")
+      .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+      .first();
+
+    const now = Date.now();
+
+    if (existing) {
+      const updates: any = { updatedAt: now };
+      if (args.dailyGoalCalories !== undefined)
+        updates.dailyGoalCalories = args.dailyGoalCalories;
+      if (args.dailyGoalProtein !== undefined)
+        updates.dailyGoalProtein = args.dailyGoalProtein;
+      if (args.dailyGoalCarbs !== undefined)
+        updates.dailyGoalCarbs = args.dailyGoalCarbs;
+      if (args.dailyGoalFat !== undefined)
+        updates.dailyGoalFat = args.dailyGoalFat;
+      if (args.dailyGoalFiber !== undefined)
+        updates.dailyGoalFiber = args.dailyGoalFiber;
+
+      await ctx.db.patch(existing._id, updates);
+      return existing._id;
+    } else {
+      return await ctx.db.insert("foodSettings", {
+        userId: identity.subject,
+        dailyGoalCalories: args.dailyGoalCalories ?? 2000,
+        dailyGoalProtein: args.dailyGoalProtein ?? 150,
+        dailyGoalCarbs: args.dailyGoalCarbs ?? 250,
+        dailyGoalFat: args.dailyGoalFat ?? 65,
+        dailyGoalFiber: args.dailyGoalFiber ?? 25,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+  },
+});
+
 export const addEntry = mutation({
   args: {
     name: v.string(),
@@ -55,7 +129,6 @@ export const addEntry = mutation({
   },
 });
 
-// Update food entry
 export const updateEntry = mutation({
   args: {
     id: v.id("foodEntries"),
@@ -94,7 +167,6 @@ export const updateEntry = mutation({
   },
 });
 
-// Remove food entry
 export const removeEntry = mutation({
   args: { id: v.id("foodEntries") },
   handler: async (ctx, args) => {
@@ -111,7 +183,6 @@ export const removeEntry = mutation({
   },
 });
 
-// Toggle favorite status
 export const toggleFavorite = mutation({
   args: { id: v.id("foodEntries") },
   handler: async (ctx, args) => {
@@ -128,7 +199,6 @@ export const toggleFavorite = mutation({
   },
 });
 
-// Get entries for a specific date
 export const getEntriesForDate = query({
   args: {
     date: v.number(),
@@ -155,7 +225,6 @@ export const getEntriesForDate = query({
   },
 });
 
-// Get entries for a date range
 export const getEntriesForRange = query({
   args: {
     startDate: v.number(),
@@ -183,7 +252,6 @@ export const getEntriesForRange = query({
   },
 });
 
-// Get daily summary
 export const getDailySummary = query({
   args: {
     date: v.optional(v.number()),
@@ -195,6 +263,17 @@ export const getDailySummary = query({
     const date = args.date ?? Date.now();
     const startOfDay = startOfDayMs(date);
     const endOfDay = endOfDayMs(date);
+
+    const settings = await ctx.db
+      .query("foodSettings")
+      .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+      .first();
+
+    const dailyGoalCalories = settings?.dailyGoalCalories ?? 2000;
+    const dailyGoalProtein = settings?.dailyGoalProtein ?? 150;
+    const dailyGoalCarbs = settings?.dailyGoalCarbs ?? 250;
+    const dailyGoalFat = settings?.dailyGoalFat ?? 65;
+    const dailyGoalFiber = settings?.dailyGoalFiber ?? 25;
 
     const entries = await ctx.db
       .query("foodEntries")
@@ -231,6 +310,18 @@ export const getDailySummary = query({
       byMealType[entry.mealType].push(entry);
     }
 
+    const caloriesPercentage = Math.min(
+      100,
+      (totalCalories / dailyGoalCalories) * 100
+    );
+    const proteinPercentage = Math.min(
+      100,
+      (totalProtein / dailyGoalProtein) * 100
+    );
+    const carbsPercentage = Math.min(100, (totalCarbs / dailyGoalCarbs) * 100);
+    const fatPercentage = Math.min(100, (totalFat / dailyGoalFat) * 100);
+    const fiberPercentage = Math.min(100, (totalFiber / dailyGoalFiber) * 100);
+
     return {
       entries: entries.sort((a, b) => a.timestamp - b.timestamp),
       byMealType,
@@ -241,12 +332,25 @@ export const getDailySummary = query({
         fat: totalFat,
         fiber: totalFiber,
       },
+      goals: {
+        calories: dailyGoalCalories,
+        protein: dailyGoalProtein,
+        carbs: dailyGoalCarbs,
+        fat: dailyGoalFat,
+        fiber: dailyGoalFiber,
+      },
+      percentages: {
+        calories: caloriesPercentage,
+        protein: proteinPercentage,
+        carbs: carbsPercentage,
+        fat: fatPercentage,
+        fiber: fiberPercentage,
+      },
       entriesCount: entries.length,
     };
   },
 });
 
-// Get weekly summary
 export const getWeeklySummary = query({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -297,7 +401,6 @@ export const getWeeklySummary = query({
   },
 });
 
-// Get favorites
 export const getFavorites = query({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -310,9 +413,8 @@ export const getFavorites = query({
       )
       .collect();
 
-    // Get unique favorites by name (return most recent version of each)
-    const uniqueFavorites = new Map<string, typeof favorites[0]>();
-    
+    const uniqueFavorites = new Map<string, (typeof favorites)[0]>();
+
     for (const fav of favorites) {
       const existing = uniqueFavorites.get(fav.name.toLowerCase());
       if (!existing || fav.timestamp > existing.timestamp) {
@@ -326,7 +428,6 @@ export const getFavorites = query({
   },
 });
 
-// Quick add from favorite
 export const addFromFavorite = mutation({
   args: {
     favoriteId: v.id("foodEntries"),
@@ -353,8 +454,7 @@ export const addFromFavorite = mutation({
       fat: favorite.fat,
       fiber: favorite.fiber,
       timestamp: args.timestamp ?? Date.now(),
-      isFavorite: false, // Don't mark the new entry as favorite
+      isFavorite: false,
     });
   },
 });
-

@@ -40,7 +40,7 @@ export function MealSection({
 }: MealSectionProps) {
   return (
     <Card key={mealType}>
-      <CardHeader>
+      <CardContent className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
@@ -60,62 +60,62 @@ export function MealSection({
             Add
           </Button>
         </div>
-      </CardHeader>
-      {entries.length > 0 && (
-        <CardContent className="space-y-2">
-          {entries.map((entry) => (
-            <div
-              key={entry._id}
-              className="flex items-start justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-            >
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h4 className="font-semibold">{entry.name}</h4>
-                  {entry.isFavorite && (
-                    <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                  )}
-                </div>
-                {entry.notes && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {entry.notes}
-                  </p>
-                )}
-                <NutritionBadges entry={entry} />
-              </div>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onToggleFavorite(entry._id)}
-                >
-                  <Star
-                    className={cn(
-                      "h-4 w-4",
-                      entry.isFavorite
-                        ? "fill-yellow-500 text-yellow-500"
-                        : "text-muted-foreground",
+        {entries.length > 0 && (
+          <div className="flex flex-col gap-2">
+            {entries.map((entry) => (
+              <div
+                key={entry._id}
+                className="flex items-start justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-semibold">{entry.name}</h4>
+                    {entry.isFavorite && (
+                      <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
                     )}
-                  />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onEdit(entry)}
-                >
-                  <Edit className="h-4 w-4 text-muted-foreground" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onDelete(entry._id)}
-                >
-                  <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                </Button>
+                  </div>
+                  {entry.notes && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {entry.notes}
+                    </p>
+                  )}
+                  <NutritionBadges entry={entry} />
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onToggleFavorite(entry._id)}
+                  >
+                    <Star
+                      className={cn(
+                        "h-4 w-4",
+                        entry.isFavorite
+                          ? "fill-yellow-500 text-yellow-500"
+                          : "text-muted-foreground"
+                      )}
+                    />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEdit(entry)}
+                  >
+                    <Edit className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onDelete(entry._id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
-        </CardContent>
-      )}
+            ))}
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 }

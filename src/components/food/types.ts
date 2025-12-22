@@ -17,10 +17,28 @@ export type DailyTotals = {
   fiber: number;
 };
 
+export type DailyGoals = {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+};
+
+export type DailyPercentages = {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+};
+
 export type DailySummary = {
   entries: FoodEntry[];
   byMealType: MealsByType;
   totals: DailyTotals;
+  goals: DailyGoals;
+  percentages: DailyPercentages;
   entriesCount: number;
 };
 

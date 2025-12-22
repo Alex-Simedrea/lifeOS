@@ -223,6 +223,17 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_date", ["userId", "timestamp"]),
 
+  foodSettings: defineTable({
+    userId: v.string(),
+    dailyGoalCalories: v.number(),
+    dailyGoalProtein: v.number(),
+    dailyGoalCarbs: v.number(),
+    dailyGoalFat: v.number(),
+    dailyGoalFiber: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
+
   foodEntries: defineTable({
     userId: v.string(),
     name: v.string(),
@@ -244,5 +255,16 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_date", ["userId", "timestamp"])
     .index("by_user_favorites", ["userId", "isFavorite"]),
+
+  notes: defineTable({
+    userId: v.string(),
+    title: v.string(),
+    content: v.string(),
+    tags: v.array(v.id("tags")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_updated", ["userId", "updatedAt"]),
 })
 

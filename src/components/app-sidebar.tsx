@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   Settings,
   ChevronRight,
+  FileText,
 } from 'lucide-react'
 import { UserButton } from '@clerk/nextjs'
 
@@ -45,6 +46,7 @@ const navItems = [
       { title: 'Tasks', icon: CheckSquare, href: '/tasks' },
       { title: 'Calendar', icon: Calendar, href: '/calendar' },
       { title: 'Timers', icon: Timer, href: '/timers' },
+      { title: 'Notes', icon: FileText, href: '/notes' },
     ],
   },
   {
