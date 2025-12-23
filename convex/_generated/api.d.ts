@@ -13,6 +13,7 @@ import type * as food from "../food.js";
 import type * as habits from "../habits.js";
 import type * as hydration from "../hydration.js";
 import type * as notes from "../notes.js";
+import type * as search from "../search.js";
 import type * as tags from "../tags.js";
 import type * as tasks from "../tasks.js";
 import type * as timers from "../timers.js";
@@ -29,6 +30,7 @@ declare const fullApi: ApiFromModules<{
   habits: typeof habits;
   hydration: typeof hydration;
   notes: typeof notes;
+  search: typeof search;
   tags: typeof tags;
   tasks: typeof tasks;
   timers: typeof timers;
