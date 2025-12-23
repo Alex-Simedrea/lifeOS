@@ -19,10 +19,10 @@ import {
 import {
   startOfDay,
   format,
-  subDays,
   eachDayOfInterval,
   startOfMonth,
   startOfWeek,
+  endOfWeek,
   addWeeks,
   addMonths,
   subWeeks,
@@ -646,25 +646,43 @@ function HabitCard({
 
   const canCheckin = checkinsInPeriod.length < timesRequired;
 
-  const last7Days = useMemo(() => {
-    if (period !== "day") return [];
-    const days = eachDayOfInterval({
-      start: subDays(new Date(), 6),
-      end: new Date(),
+  const heatmapData = useMemo(() => {
+    if (period !== "day" || !checkins) return null;
+    const now = new Date();
+    const weeks = 12;
+    const heatmapStart = startOfWeek(subWeeks(now, weeks - 1), {
+      weekStartsOn: 1,
     });
-    return days.map((day) => {
-      const dayStart = startOfDay(day).getTime();
-      const dayCheckins = checkins?.filter((c) => {
-        const checkinDay = startOfDay(new Date(c.timestamp)).getTime();
-        return checkinDay === dayStart;
-      });
+    const heatmapEnd = endOfWeek(now, { weekStartsOn: 1 });
+    const days = eachDayOfInterval({
+      start: heatmapStart,
+      end: heatmapEnd,
+    });
+    const countsByDay = new Map<number, number>();
+    for (const checkin of checkins) {
+      const dayKey = startOfDay(new Date(checkin.timestamp)).getTime();
+      if (dayKey < heatmapStart.getTime() || dayKey > heatmapEnd.getTime()) {
+        continue;
+      }
+      countsByDay.set(dayKey, (countsByDay.get(dayKey) ?? 0) + 1);
+    }
+    const todayKey = startOfDay(now).getTime();
+    const cells = days.map((date) => {
+      const dayKey = startOfDay(date).getTime();
       return {
-        date: day,
-        count: dayCheckins?.length || 0,
-        target: timesRequired,
+        date,
+        count: countsByDay.get(dayKey) ?? 0,
+        isFuture: dayKey > todayKey,
       };
     });
-  }, [checkins, timesRequired, period]);
+    const columns = Math.ceil(cells.length / 7);
+    const monthLabels = Array.from({ length: columns }, (_, index) => {
+      const cell = cells[index * 7];
+      if (!cell) return "";
+      return cell.date.getDate() <= 7 ? format(cell.date, "MMM") : "";
+    });
+    return { cells, columns, monthLabels };
+  }, [checkins, period]);
 
   const recentPeriods = useMemo(() => {
     if (!checkins) return [];
@@ -802,40 +820,57 @@ function HabitCard({
           </div>
         </div>
 
-        {period === "day" && (
+        {period === "day" && heatmapData && (
           <div>
-            <p className="text-xs text-muted-foreground mb-2">Last 7 days</p>
-            <div className="grid grid-cols-7 gap-1">
-              {last7Days.map((day, i) => {
-                const completed = day.count >= day.target;
-                return (
-                  <div
-                    key={i}
-                    style={{
-                      backgroundColor: completed
-                        ? habit.color
-                        : day.count > 0
-                          ? `${habit.color}40`
-                          : undefined,
-                    }}
-                    className={cn(
-                      "aspect-square rounded-lg flex flex-col items-center justify-center text-xs",
-                      !completed && day.count === 0 && "bg-muted"
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "text-[10px] font-medium",
-                        completed || day.count > 0
-                          ? "text-white"
-                          : "text-muted-foreground"
-                      )}
-                    >
-                      {format(day.date, "EEE")[0]}
-                    </span>
-                  </div>
-                );
-              })}
+            <p className="text-xs text-muted-foreground mb-2">
+              Daily history
+            </p>
+            <div className="space-y-2">
+              <div
+                className="grid gap-1 text-[10px] text-muted-foreground"
+                style={{
+                  gridTemplateColumns: `repeat(${heatmapData.columns}, minmax(0, 1fr))`,
+                }}
+              >
+                {heatmapData.monthLabels.map((label, index) => (
+                  <div key={`month-${index}`}>{label}</div>
+                ))}
+              </div>
+              <div
+                className="grid grid-rows-7 grid-flow-col gap-1"
+                style={{
+                  gridTemplateColumns: `repeat(${heatmapData.columns}, minmax(0, 1fr))`,
+                }}
+              >
+                {heatmapData.cells.map((cell) => {
+                  const ratio =
+                    timesRequired > 0 ? cell.count / timesRequired : 0;
+                  const isFull = cell.count >= timesRequired;
+                  const isPartial = cell.count > 0 && !isFull;
+                  const bgClass = cell.isFuture
+                    ? "bg-muted/30"
+                    : !isFull && !isPartial
+                      ? "bg-muted/60"
+                      : "";
+                  let backgroundColor: string | undefined;
+                  if (isFull) {
+                    backgroundColor = habit.color;
+                  } else if (isPartial) {
+                    backgroundColor =
+                      ratio >= 0.66 ? `${habit.color}80` : `${habit.color}40`;
+                  }
+                  return (
+                    <div
+                      key={cell.date.toISOString()}
+                      title={`${format(cell.date, "MMM d")}: ${
+                        cell.count
+                      }/${timesRequired}`}
+                      className={cn("h-3 w-3 rounded-[3px]", bgClass)}
+                      style={{ backgroundColor }}
+                    />
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}

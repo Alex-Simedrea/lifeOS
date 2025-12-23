@@ -48,7 +48,11 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
-import { playTimerEndSound } from "@/lib/timers/sound";
+import {
+  playTimerEndSound,
+  startTimerEndSoundLoop,
+  stopTimerEndSoundLoop,
+} from "@/lib/timers/sound";
 import { getOrCreateTabId } from "@/lib/timers/tab-id";
 
 type RunState =
@@ -75,6 +79,24 @@ type RunState =
   | {
       kind: "stopwatch";
       startedAt: number;
+      sessionId: Id<"timerSessions">;
+    };
+
+type AlarmState =
+  | {
+      kind: "countdown";
+      startedAt: number;
+      completedAt: number;
+      durationMs: number;
+      sessionId: Id<"timerSessions">;
+    }
+  | {
+      kind: "pomodoro";
+      startedAt: number;
+      completedAt: number;
+      cyclesCompleted: number;
+      totalWorkMs: number;
+      totalBreakMs: number;
       sessionId: Id<"timerSessions">;
     };
 
@@ -117,6 +139,7 @@ export function TimersContent() {
   const [countdownSec, setCountdownSec] = useState(0);
 
   const [runState, setRunState] = useState<RunState | null>(null);
+  const [alarmState, setAlarmState] = useState<AlarmState | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [totalsNowMs, setTotalsNowMs] = useState(() => Date.now());
   const endingRef = useRef(false);
@@ -150,6 +173,7 @@ export function TimersContent() {
   const isRunning =
     runState !== null ||
     (activeSession?.status === "running" && activeSession.endedAt === 0);
+  const isAlarmActive = alarmState !== null;
 
   useEffect(() => {
     const id = window.setInterval(() => setNowMs(Date.now()), 250);
@@ -169,6 +193,8 @@ export function TimersContent() {
   }) => {
     if (endingRef.current) return;
     endingRef.current = true;
+    stopTimerEndSoundLoop();
+    setAlarmState(null);
     try {
       const sessionId = runState?.sessionId ?? activeSession?._id;
       if (!sessionId) return;
@@ -207,6 +233,7 @@ export function TimersContent() {
 
   useEffect(() => {
     return () => {
+      stopTimerEndSoundLoop();
       const startedAt = runState?.startedAt ?? activeSession?.startedAt;
       const sessionId = runState?.sessionId ?? activeSession?._id;
       if (!sessionId || !startedAt) return;
@@ -222,44 +249,47 @@ export function TimersContent() {
 
   useEffect(() => {
     if (!runState || runState.kind !== "countdown") return;
+    if (alarmState) return;
+    if (endingRef.current) return;
     const remaining = runState.endsAt - nowMs;
     if (remaining > 0) return;
 
-    playTimerEndSound();
-    void endActive({
-      status: "completed",
-      endReason: "completed",
+    setAlarmState({
+      kind: "countdown",
+      startedAt: runState.startedAt,
+      completedAt: runState.endsAt,
       durationMs: runState.durationMs,
-      result: { kind: "countdown", completed: true },
+      sessionId: runState.sessionId,
     });
-  }, [runState, nowMs]);
+    startTimerEndSoundLoop();
+  }, [runState, nowMs, alarmState]);
 
   useEffect(() => {
     if (!runState || runState.kind !== "pomodoro") return;
+    if (alarmState) return;
+    if (endingRef.current) return;
     const remaining = runState.phaseEndsAt - nowMs;
     if (remaining > 0) return;
-
-    playTimerEndSound();
 
     if (runState.phase === "work") {
       const nextCyclesCompleted = runState.cyclesCompleted + 1;
       const nextTotalWorkMs = runState.totalWorkMs + runState.workMs;
 
       if (nextCyclesCompleted >= runState.cyclesPlanned) {
-        void endActive({
-          status: "completed",
-          endReason: "completed",
-          durationMs: Math.max(0, nowMs - runState.startedAt),
-          result: {
-            kind: "pomodoro",
-            cyclesCompleted: nextCyclesCompleted,
-            totalWorkMs: nextTotalWorkMs,
-            totalBreakMs: runState.totalBreakMs,
-          },
+        setAlarmState({
+          kind: "pomodoro",
+          startedAt: runState.startedAt,
+          completedAt: runState.phaseEndsAt,
+          cyclesCompleted: nextCyclesCompleted,
+          totalWorkMs: nextTotalWorkMs,
+          totalBreakMs: runState.totalBreakMs,
+          sessionId: runState.sessionId,
         });
+        startTimerEndSoundLoop();
         return;
       }
 
+      playTimerEndSound();
       setRunState({
         ...runState,
         phase: "break",
@@ -270,13 +300,14 @@ export function TimersContent() {
       return;
     }
 
+    playTimerEndSound();
     setRunState({
       ...runState,
       phase: "work",
       totalBreakMs: runState.totalBreakMs + runState.breakMs,
       phaseEndsAt: nowMs + runState.workMs,
     });
-  }, [runState, nowMs]);
+  }, [runState, nowMs, alarmState]);
 
   const canStart = !isRunning;
 
@@ -285,6 +316,8 @@ export function TimersContent() {
   const normalizedTagIds = selectedTagIds as Array<Id<"tags">>;
 
   const startPomodoro = async () => {
+    stopTimerEndSoundLoop();
+    setAlarmState(null);
     const workMs = Math.max(1, pomodoroWorkMin) * 60_000;
     const breakMs = Math.max(1, pomodoroBreakMin) * 60_000;
     const cyclesPlanned = Math.max(1, pomodoroCycles);
@@ -315,6 +348,8 @@ export function TimersContent() {
   };
 
   const startCountdown = async () => {
+    stopTimerEndSoundLoop();
+    setAlarmState(null);
     const durationMs =
       Math.max(0, countdownMin) * 60_000 + Math.max(0, countdownSec) * 1000;
     if (durationMs <= 0) return;
@@ -338,6 +373,8 @@ export function TimersContent() {
   };
 
   const startStopwatch = async () => {
+    stopTimerEndSoundLoop();
+    setAlarmState(null);
     const startedAt = Date.now();
     const sessionId = await startSession({
       tabId,
@@ -370,6 +407,30 @@ export function TimersContent() {
     await endActive({
       status: "cancelled",
       endReason: "stopped",
+      durationMs,
+      result,
+    });
+  };
+
+  const dismissAlarm = async () => {
+    if (!alarmState) return;
+    const durationMs = Math.max(
+      0,
+      alarmState.completedAt - alarmState.startedAt
+    );
+    const result =
+      alarmState.kind === "pomodoro"
+        ? {
+            kind: "pomodoro",
+            cyclesCompleted: alarmState.cyclesCompleted,
+            totalWorkMs: alarmState.totalWorkMs,
+            totalBreakMs: alarmState.totalBreakMs,
+          }
+        : { kind: "countdown", completed: true };
+
+    await endActive({
+      status: "completed",
+      endReason: "completed",
       durationMs,
       result,
     });
@@ -466,11 +527,11 @@ export function TimersContent() {
                 <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-transparent" />
                 <CardContent className="p-8 md:p-12 relative">
                   <div className="flex flex-col items-center text-center space-y-6">
-                    <div className="flex items-center gap-2">
-                      {runState?.kind === "pomodoro" &&
-                        runState.phase === "work" && (
-                          <>
-                            <Brain className="h-5 w-5 text-primary" />
+                  <div className="flex items-center gap-2">
+                    {runState?.kind === "pomodoro" &&
+                      runState.phase === "work" && (
+                        <>
+                          <Brain className="h-5 w-5 text-primary" />
                             <span className="text-sm font-medium text-muted-foreground">
                               Focus Session
                             </span>
@@ -502,6 +563,12 @@ export function TimersContent() {
                         </>
                       )}
                     </div>
+
+                    {isAlarmActive && (
+                      <div className="text-3xl font-semibold text-amber-600">
+                        Time's up
+                      </div>
+                    )}
 
                     <div className="relative">
                       <div className="font-mono text-7xl md:text-8xl font-bold tracking-tight text-center">
@@ -561,14 +628,21 @@ export function TimersContent() {
                       </div>
                     )}
 
-                    <Button
-                      size="lg"
-                      variant="destructive"
-                      onClick={() => void stopNow()}
-                    >
-                      <Pause className="h-5 w-5" />
-                      Stop Session
-                    </Button>
+                    {isAlarmActive ? (
+                      <Button size="lg" onClick={() => void dismissAlarm()}>
+                        <X className="h-5 w-5" />
+                        Dismiss Alarm
+                      </Button>
+                    ) : (
+                      <Button
+                        size="lg"
+                        variant="destructive"
+                        onClick={() => void stopNow()}
+                      >
+                        <Pause className="h-5 w-5" />
+                        Stop Session
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>

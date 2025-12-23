@@ -1,4 +1,5 @@
 let audioCtx: AudioContext | null = null
+let alarmIntervalId: number | null = null
 
 export function playTimerEndSound() {
   // WebAudio is the most reliable way to avoid shipping an asset.
@@ -32,4 +33,19 @@ export function playTimerEndSound() {
   }
 }
 
+export function startTimerEndSoundLoop() {
+  if (typeof window === "undefined") return
+  if (alarmIntervalId !== null) return
+  playTimerEndSound()
+  alarmIntervalId = window.setInterval(() => {
+    playTimerEndSound()
+  }, 1200)
+}
+
+export function stopTimerEndSoundLoop() {
+  if (typeof window === "undefined") return
+  if (alarmIntervalId === null) return
+  window.clearInterval(alarmIntervalId)
+  alarmIntervalId = null
+}
 
